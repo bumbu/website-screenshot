@@ -172,14 +172,15 @@ module.exports = function (options, callback) {
 		}
 	});
 
-  var cookie = {url: 'http://localhost:8000/', name: 'dev_appserver_login', value: 'atruhin@google.com:True:180236212682823511485'}
+  if (options.cookies && options.cookies.length) {
+    // TODO wait for the cookies to be set before loading the URL
+    options.cookies.forEach(function(cookie) {
+      popupWindow.webContents.session.cookies.set(cookie, (error) => {
+        if (error) console.log(error)
+      })
+    })
+  }
 
-
-  // options.logFn('bumbu')
-  popupWindow.webContents.session.cookies.set(cookie, (error) => {
-    if (error) console.log(error)
-    // Start loading the URL
-    popupWindow.loadURL(options.url);
-  })
-
+  // Start loading the URL
+  popupWindow.loadURL(options.url);
 };
