@@ -172,15 +172,49 @@ module.exports = function (options, callback) {
 		}
 	});
 
+  let promise = Promise.resolve();
+
   if (options.cookies && options.cookies.length) {
-    // TODO wait for the cookies to be set before loading the URL
+    // Get current cookies
+    promise = promise.then(function() {
+      return new Promise(function(resolve, reject) {
+        popupWindow.webContents.session.cookies.get({}, (error, cookies) => {
+          resolve(cookies);
+        })
+      })
+    })
+
+    // Remove current cookies
+    promise = promise.then(function(oldCookies) {
+      let localPromise = Promise.resolve();
+      oldCookies && oldCookies.forEach(function(cookie) {
+        localPromise = localPromise.then(function() {
+          return new Promise(function(resolve, reject) {
+            popupWindow.webContents.session.cookies.remove(options.cookies[0].url, cookie.name, (error, cookies) => {
+              resolve();
+            })
+          })
+        })
+      })
+
+      return localPromise;
+    })
+
+    // Set new cookies
     options.cookies.forEach(function(cookie) {
-      popupWindow.webContents.session.cookies.set(cookie, (error) => {
-        if (error) console.log(error)
+      promise = promise.then(function(){
+        return new Promise(function(resolve, reject) {
+          popupWindow.webContents.session.cookies.set(cookie, (error) => {
+            if (error) console.log(error)
+              resolve();
+          })
+        })
       })
     })
   }
 
   // Start loading the URL
-  popupWindow.loadURL(options.url);
+  promise.then(function() {
+    popupWindow.loadURL(options.url);
+  })
 };
