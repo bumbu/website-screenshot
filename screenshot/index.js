@@ -174,7 +174,7 @@ module.exports = function (options, callback) {
 
   let promise = Promise.resolve();
 
-  if (options.cookies && options.cookies.length) {
+  if (options.removeCookies && options.removeCookiesUrl) {
     // Get current cookies
     promise = promise.then(function() {
       return new Promise(function(resolve, reject) {
@@ -190,7 +190,7 @@ module.exports = function (options, callback) {
       oldCookies && oldCookies.forEach(function(cookie) {
         localPromise = localPromise.then(function() {
           return new Promise(function(resolve, reject) {
-            popupWindow.webContents.session.cookies.remove(options.cookies[0].url, cookie.name, (error, cookies) => {
+            popupWindow.webContents.session.cookies.remove(options.removeCookiesUrl, cookie.name, (error, cookies) => {
               resolve();
             })
           })
@@ -199,14 +199,16 @@ module.exports = function (options, callback) {
 
       return localPromise;
     })
+  }
 
+  if (options.cookies && options.cookies.length) {
     // Set new cookies
     options.cookies.forEach(function(cookie) {
       promise = promise.then(function(){
         return new Promise(function(resolve, reject) {
           popupWindow.webContents.session.cookies.set(cookie, (error) => {
             if (error) console.log(error)
-              resolve();
+            resolve();
           })
         })
       })
