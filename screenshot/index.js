@@ -172,6 +172,13 @@ module.exports = function (options, callback) {
 		}
 	});
 
+  if (options.auth) {
+    popupWindow.webContents.on('login', function(event, request, authInfo, callback) {
+      event.preventDefault();
+      callback(options.auth.user, options.auth.password);
+    })
+  }
+
   let promise = Promise.resolve();
 
   if (options.removeCookies && options.removeCookiesUrl) {
